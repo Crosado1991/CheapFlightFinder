@@ -29,6 +29,10 @@ def submit_user_info():
     last_name_var.set("")
     email_var.set("")
 
+def finish():
+    """Closes the Tkinter window to proceed with the rest of the program."""
+    root.destroy()
+
 root = Tk()
 root.title("Flight Price Tracker - User Information")
 
@@ -41,13 +45,14 @@ email_var = StringVar()
 Label(root, text="What is your first name?").grid(row=0, column=0)
 Entry(root, textvariable=first_name_var).grid(row=0, column=1)
 
-Label(root, text="What is your last name?").grid(row=1, column=0)
+Label(root, text="What is you last name?").grid(row=1, column=0)
 Entry(root, textvariable=last_name_var).grid(row=1, column=1)
 
 Label(root, text="What is your email?").grid(row=2, column=0)
 Entry(root, textvariable=email_var).grid(row=2, column=1)
 
 Button(root, text="Submit", command=submit_user_info).grid(row=3, column=1)
+Button(root, text="Finish", command=finish).grid(row=4, column=1)  # Finish button to close the window
 
 # Start the Tkinter loop
 root.mainloop()
@@ -76,9 +81,15 @@ print(f"Updated sheet data:\n{sheet_data}")
 data_manager.destination_data = sheet_data
 data_manager.update_destination_codes()
 
-# ==================== Retrieve your customer emails ====================
+# ==================== Retrieve Customer Emails ====================
 customer_data = data_manager.get_customer_emails()
-customer_email_list = [row["What is your email?"] for row in customer_data]  # Ensure this is the correct key
+print("Customer data:", customer_data)
+
+if customer_data:
+    customer_email_list = [row["whatIsYourEmail?"] for row in customer_data]
+else:
+    print("No customer data retrieved. Exiting program.")
+    exit()
 
 # ==================== Search for Flights and Send Notifications ====================
 tomorrow = datetime.now() + timedelta(days=1)
@@ -101,6 +112,7 @@ for destination in sheet_data:
     print(f"{destination['city']}: ${cheapest_flight.price}")
     time.sleep(2)
 
+    # If no direct flights are found, check for flights with stopovers
     if cheapest_flight.price == "N/A":
         stopover_flights = flight_search.check_flights(
             ORIGIN_CITY_IATA,
@@ -127,3 +139,7 @@ for destination in sheet_data:
 
         notification_manager.send_whatsapp(message_body=message)
         notification_manager.send_emails(email_list=customer_email_list, email_body=message)
+
+notification_manager.send_whatsapp("Flight price check completed successfully.")
+
+print("Flight price check completed.")
